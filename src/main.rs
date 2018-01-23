@@ -1,5 +1,5 @@
 extern crate termion;
-use termion::{clear, cursor};
+use termion::{clear, color, cursor, style};
 use termion::raw::IntoRawMode;
 use termion::input::TermRead;
 use termion::event::Key;
@@ -12,12 +12,8 @@ use std::path::Path;
 use std::fmt;
 
 fn main() {
-    let p = Path::new("main.rs");
+    let p = Path::new("test.md");
     let l = read_markdown(p);
-
-    for line in l {
-        println!("{}", line);
-    }
 
     // Lock the stdios
     let stdout = io::stdout();
@@ -33,6 +29,10 @@ fn main() {
 
     screen.init();
 
+    for line in l {
+        screen.pretty_print(&line);
+    }
+
 }
 
 fn read_markdown(file_path: &Path) -> Vec<String> {
@@ -47,9 +47,6 @@ fn read_markdown(file_path: &Path) -> Vec<String> {
     return lines;
 }
 
-fn pretty_print(text: &str) {
-}
-
 struct Screen<R, W> {
     stdin: R,
     stdout: W,
@@ -58,5 +55,13 @@ struct Screen<R, W> {
 impl<R: Read, W: Write> Screen<R, W> {
     pub fn init(&mut self) {
         write!(self.stdout, "{}{}", clear::All, cursor::Goto(1, 1)).unwrap();
+    }
+
+    pub fn pretty_print(&mut self, text: &str) {
+        if text.starts_with("#") {
+            write!(self.stdout, "{}{}", style::Bold, color::Fg(color::Blue)).unwrap();
+            write!(self.stdout, "{}", text).unwrap();
+        }
+        self.stdout.flush().unwrap();
     }
 }
